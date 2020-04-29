@@ -5,6 +5,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.Enumeration;
 
 import javax.crypto.SecretKey;
 
@@ -18,12 +19,15 @@ public class JCEKSReader {
     throws KeyStoreException, IOException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
     String fileName = args.length == 1 ? args[0] : "/tmp/secrets.jceks";
     char[] password = "none".toCharArray();
-    String alias = "javax.jdo.option.connectionpassword";
     KeyStore ks = KeyStore.getInstance("JCEKS");
     try (FileInputStream fis = new FileInputStream(fileName)) {
       ks.load(fis, password);
-      SecretKey secretKey = (SecretKey) ks.getKey(alias, password);
-      System.out.println(new String(secretKey.getEncoded()));
+      Enumeration<String> enumeration = ks.aliases();
+      while(enumeration.hasMoreElements()) {
+        String alias = enumeration.nextElement();
+        SecretKey secretKey = (SecretKey) ks.getKey(alias, password);
+        System.out.println(alias + ": " + new String(secretKey.getEncoded()));
+      }
     }
   }
 }
